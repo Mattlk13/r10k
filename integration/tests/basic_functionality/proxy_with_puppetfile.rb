@@ -41,8 +41,13 @@ step 'Install and configure squid proxy'
 on(master, install_squid)
 master.add_env_var('http_proxy', "http://#{master.hostname}:3128")
 
-step 'turn off the firewall'
-on(master, puppet("apply -e 'service {'iptables' : ensure => stopped}'"))
+if master['platform'] =~ /el-10/
+  step 'Open up squid'
+  on(master, "sed -i 's/# http_access allow localnet/http_access allow localnet/' /etc/squid/squid.conf")
+else
+  step 'Turn off the firewall'
+  on(master, puppet("apply -e 'service {'iptables' : ensure => stopped}'"))
+end
 
 step 'start squid proxy'
 on(master, puppet("apply -e 'service {'squid' : ensure => running}'"))
