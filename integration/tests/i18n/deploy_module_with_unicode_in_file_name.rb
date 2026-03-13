@@ -57,7 +57,7 @@ test_i18n_strings(10, [:syntax, :white_space]) do |test_string|
   agents.each do |agent|
     step "Run Puppet Agent"
     on(agent, puppet('agent', '--test', '--environment production'), :acceptable_exit_codes => 2) do |result|
-      assert_no_match(/Error:/, result.stderr, 'Unexpected error was detected!')
+      refute_match(/Error:/, result.stderr, 'Unexpected error was detected!')
       assert_match(notify_message_regex, result.stdout, 'Expected message not found!')
     end
   end

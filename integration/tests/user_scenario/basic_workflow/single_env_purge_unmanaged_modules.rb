@@ -65,7 +65,7 @@ on(master, puppet("module install puppetlabs-motd --modulepath #{moduledir}"))
 agents.each do |agent|
   step 'Run Puppet Agent Against "production" Environment'
   on(agent, puppet('agent', '--test', '--environment production'), :acceptable_exit_codes => 2) do |result|
-    assert_no_match(/Error:/, result.stderr, 'Unexpected error was detected!')
+    refute_match(/Error:/, result.stderr, 'Unexpected error was detected!')
   end
 
   step "Verify MOTD Contents"
