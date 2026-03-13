@@ -86,10 +86,16 @@ git_add_commit_push(master, 'production', 'add Puppetfile', git_environments_pat
 step 'Install and configure squid proxy'
 on(master, install_squid)
 
-step 'turn off the firewall'
-on(master, puppet("apply -e 'service {'iptables' : ensure => stopped}'"))
+if master['platform'] =~ /el-10/
+  step 'Open up squid'
+  on(master, "sed -i 's/# http_access allow localnet/http_access allow localnet/' /etc/squid/squid.conf")
+else
+  # who uses iptables anymore?
+  step 'Turn off the firewall'
+  on(master, puppet("apply -e 'service {'iptables' : ensure => stopped}'"))
+end
 
-step 'start squid proxy'
+step 'Start squid proxy'
 on(master, puppet("apply -e 'service {'squid' : ensure => running}'"))
 
 #Tests
