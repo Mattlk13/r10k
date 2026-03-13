@@ -69,7 +69,7 @@ on(master, "#{r10k_fqp} deploy environment -p -v")
 agents.each do |agent|
   step "Run Puppet Agent"
   on(agent, puppet('agent', '--test', '--environment production'), :acceptable_exit_codes => [0,2]) do |result|
-    assert_no_match(/Error:/, result.stderr, 'Unexpected error was detected!')
+    refute_match(/Error:/, result.stderr, 'Unexpected error was detected!')
   end
 
   step 'Verify Contents of MOTD Module'

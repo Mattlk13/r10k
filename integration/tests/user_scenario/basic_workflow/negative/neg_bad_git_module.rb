@@ -41,5 +41,5 @@ git_add_commit_push(master, 'production', 'Update Puppetfile.', git_environments
 #Tests
 step 'Attempt to Deploy via r10k'
 on(master, "#{r10k_fqp} deploy environment -v -p", :acceptable_exit_codes => 1) do |result|
-  assert_no_match(error_message_regex, result.stderr, 'Expected message not found!')
+  refute_match(error_message_regex, result.stderr, 'Expected message not found!')
 end

@@ -140,7 +140,7 @@ on(master, "#{r10k_fqp} deploy environment -v -p")
 agents.each do |agent|
   step 'Run Puppet Agent Against "production" Environment'
   on(agent, puppet('agent', '--test', '--environment production'), :acceptable_exit_codes => 2) do |result|
-    assert_no_match(/Error:/, result.stderr, 'Unexpected error was detected!')
+    refute_match(/Error:/, result.stderr, 'Unexpected error was detected!')
     assert_match(/I am in the production environment/, result.stdout, 'Expected message not found!')
   end
 
@@ -151,7 +151,7 @@ agents.each do |agent|
 
   step 'Run Puppet Agent Against "stage" Environment'
   on(agent, puppet('agent', '--test', '--environment stage'), :acceptable_exit_codes => 2) do |result|
-    assert_no_match(/Error:/, result.stderr, 'Unexpected error was detected!')
+    refute_match(/Error:/, result.stderr, 'Unexpected error was detected!')
     assert_match(/I am in the stage environment/, result.stdout, 'Expected message not found!')
     assert_match(stdlib_notify_message_regex, result.stdout, 'Expected message not found!')
   end

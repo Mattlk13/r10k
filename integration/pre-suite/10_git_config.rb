@@ -34,7 +34,7 @@ on(master, puppet("module install  puppetlabs-git --modulepath #{@module_path}")
 
 step 'Install and Configure Git'
 on(master, puppet('apply'), :stdin => git_manifest, :acceptable_exit_codes => [0,2]) do |result|
-  assert_no_match(/Error:/, result.stderr, 'Unexpected error was detected!')
+  refute_match(/Error:/, result.stderr, 'Unexpected error was detected!')
 end
 on(master, 'git config --system --add safe.directory "*"')
 
