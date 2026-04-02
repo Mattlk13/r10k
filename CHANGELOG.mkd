@@ -4,6 +4,11 @@ CHANGELOG
 Unreleased
 ----------
 
+5.0.3
+-----
+
+- Require puppet_forge >= 6.1.0 to pull in Windows long path fix [PE-43589](https://perforce.atlassian.net/browse/PE-43589)
+
 5.0.2
 -----
 
