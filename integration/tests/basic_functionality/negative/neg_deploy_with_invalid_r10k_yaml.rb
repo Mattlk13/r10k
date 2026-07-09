@@ -28,7 +28,18 @@ CONF
 if get_puppet_version(master) < 4.0
   error_message_regex = /ERROR.*can\'t\ convert\ nil\ into\ String/
 else
-  error_message_regex = /ERROR.* -> no implicit conversion of nil into String/
+  # The wording of the TypeError raised when a nil is passed to Pathname.new
+  # depends on the Ruby that puppet-agent bundles (which r10k runs under), not
+  # the Puppet version. Ruby 3.4+ (shipped as of Puppet 9 / PE 2026) raises
+  # "Pathname.new requires a String, #to_path or #to_str"; older Ruby raised
+  # "no implicit conversion of nil into String".
+  ruby_fqp = File.join(File.dirname(r10k_fqp), 'ruby')
+  ruby_version = on(master, "#{ruby_fqp} -e 'print RUBY_VERSION'").stdout.strip
+  if Gem::Version.new(ruby_version) >= Gem::Version.new('3.4.0')
+    error_message_regex = /ERROR.* -> Pathname\.new requires a String/
+  else
+    error_message_regex = /ERROR.* -> no implicit conversion of nil into String/
+  end
 end
 
 #Teardown
