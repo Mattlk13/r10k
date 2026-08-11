@@ -53,3 +53,12 @@ restart_puppet_server(master)
 
 step 'Run Puppet Agent on All Nodes'
 on(agents, puppet('agent', '--test', '--environment production'))
+
+# The production run above applies the PE agent profile, which re-enables and
+# restarts Service[puppet]. Its daemonized periodic runs then race the explicit
+# `puppet agent --test` invocations in the test suite and intermittently fail
+# them with "Run of Puppet configuration client already in progress; skipping
+# (agent_catalog_run.lock exists)". The test environments are custom (no PE
+# profile), so nothing re-enables the service once it is disabled here.
+step 'Stop and disable the puppet agent service to avoid catalog-run lock races'
+on(hosts, puppet('resource', 'service', 'puppet', 'ensure=stopped', 'enable=false'))
