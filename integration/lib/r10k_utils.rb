@@ -1,5 +1,46 @@
 require 'git_utils'
 
+# Run "puppet agent --test" on a host without racing the daemonized agent's
+# periodic catalog run (PE-45753).
+#
+# Several r10k tests run against the PE "production" environment, which
+# re-applies the PE agent profile and re-enables/restarts Service[puppet].
+# The daemon's background run can then hold agent_catalog_run.lock exactly
+# when a test fires its own "puppet agent --test", failing it with "Run of
+# Puppet configuration client already in progress; skipping".
+#
+# The pre-suite (20_pe_r10k.rb) stops and disables Service[puppet] once, which
+# covers the windows between explicit runs (r10k deploys, config writes,
+# teardown). This helper handles the remaining case: a run against "production"
+# re-enables the service, so "--waitforlock 1" makes each explicit run wait for
+# the lock (polling once a second) rather than erroring if the daemon re-armed.
+# "--maxwaitforlock 5m" raises the wait ceiling above Puppet's 60s default so a
+# slow daemonized production catalog run cannot clip the wait on slow CI hosts.
+# --waitforlock also clears a stale lock (dead PID) via Puppet's pidlock, so it
+# never hangs the run the way an unconditional lockfile poll would.
+#
+# ==== Attributes
+#
+# * +host+ - The host (or hosts array) to run the agent on.
+# * +environment+ - The Puppet environment to run against. Defaults to
+#   "production".
+# * +acceptable_exit_codes+ - Exit codes to accept, passed through to +on+.
+#   When nil (default), +on+'s default is used.
+#
+# ==== Returns
+#
+# The result of the +on+ call (yields to a block if given, like +on+).
+#
+# ==== Examples
+#
+# run_puppet_agent(agent, 'production', 2) do |result|
+#   assert_match(/expected/, result.stdout)
+# end
+def run_puppet_agent(host, environment = 'production', acceptable_exit_codes = nil, &block)
+  opts = acceptable_exit_codes.nil? ? {} : { :acceptable_exit_codes => acceptable_exit_codes }
+  on(host, puppet('agent', '--test', "--environment #{environment}", '--waitforlock 1', '--maxwaitforlock 5m'), opts, &block)
+end
+
 # Retrieve the file path for the "r10k.yaml" configuration file.
 #
 # ==== Attributes

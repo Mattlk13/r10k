@@ -124,7 +124,7 @@ sources.sample(3).each do |source|
   source.env_names.sample(1).each do |env_name|
     agents.each do |agent|
       step "Run Puppet Agent Against \"#{env_name}\" Environment"
-      on(agent, puppet('agent', '--test', "--environment #{env_name}"), :acceptable_exit_codes => 2) do |result|
+      run_puppet_agent(agent, env_name, 2) do |result|
         refute_match(/Error:/, result.stderr, 'Unexpected error was detected!')
         assert_match(/I am in the #{env_name} environment/, result.stdout, 'Expected message not found!')
       end

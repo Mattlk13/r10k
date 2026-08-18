@@ -64,7 +64,7 @@ on(master, puppet("module install puppetlabs-motd --modulepath #{moduledir}"))
 #Tests
 agents.each do |agent|
   step 'Run Puppet Agent Against "production" Environment'
-  on(agent, puppet('agent', '--test', '--environment production'), :acceptable_exit_codes => 2) do |result|
+  run_puppet_agent(agent, 'production', 2) do |result|
     refute_match(/Error:/, result.stderr, 'Unexpected error was detected!')
   end
 
@@ -80,7 +80,7 @@ on(master, "#{r10k_fqp} puppetfile purge --puppetfile #{puppetfile_path} --modul
 #Agent will fail because r10k will purge the "motd" module
 agents.each do |agent|
   step 'Attempt to Run Puppet Agent'
-  on(agent, puppet('agent', '--test', '--environment production'), :acceptable_exit_codes => 1) do |result|
+  run_puppet_agent(agent, 'production', 1) do |result|
     assert_match(/Could not find declared class motd/, result.stderr, 'Module was not purged')
   end
 end

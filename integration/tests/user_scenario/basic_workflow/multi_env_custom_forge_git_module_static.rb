@@ -101,7 +101,7 @@ on(master, "#{r10k_fqp} deploy environment -v -p")
 env_names.each do |env|
   agents.each do |agent|
     step "Run Puppet Agent Against \"#{env}\" Environment"
-    on(agent, puppet('agent', '--test', "--environment #{env}"), :acceptable_exit_codes => 2) do |result|
+    run_puppet_agent(agent, env, 2) do |result|
       refute_match(/Error:/, result.stderr, 'Unexpected error was detected!')
       assert_match(/I am in the #{env} environment/, result.stdout, 'Expected message not found!')
       assert_match(stdlib_notify_message_regex, result.stdout, 'Expected message not found!')
