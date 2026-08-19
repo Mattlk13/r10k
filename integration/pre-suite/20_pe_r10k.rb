@@ -52,13 +52,14 @@ step 'Restart the Puppet Server Service'
 restart_puppet_server(master)
 
 step 'Run Puppet Agent on All Nodes'
-on(agents, puppet('agent', '--test', '--environment production'))
+run_puppet_agent(agents, 'production')
 
-# The production run above applies the PE agent profile, which re-enables and
-# restarts Service[puppet]. Its daemonized periodic runs then race the explicit
-# `puppet agent --test` invocations in the test suite and intermittently fail
-# them with "Run of Puppet configuration client already in progress; skipping
-# (agent_catalog_run.lock exists)". The test environments are custom (no PE
-# profile), so nothing re-enables the service once it is disabled here.
+# The production run above re-applies the PE agent profile, which enables and
+# starts Service[puppet]. Its daemonized periodic runs would otherwise hold
+# agent_catalog_run.lock during r10k deploys, config writes, and teardown, and
+# race the explicit "puppet agent --test" runs in the tests. Stop and disable
+# the service once here to cover those windows; the tests run through
+# run_puppet_agent, which adds --waitforlock 1 to handle the case where a run
+# against "production" re-enables the service (see integration/lib/r10k_utils.rb).
 step 'Stop and disable the puppet agent service to avoid catalog-run lock races'
 on(hosts, puppet('resource', 'service', 'puppet', 'ensure=stopped', 'enable=false'))

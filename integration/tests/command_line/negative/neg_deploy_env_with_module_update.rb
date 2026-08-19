@@ -68,7 +68,7 @@ on(master, "#{r10k_fqp} deploy environment -p -v")
 
 agents.each do |agent|
   step "Run Puppet Agent"
-  on(agent, puppet('agent', '--test', '--environment production'), :acceptable_exit_codes => 1) do |result|
+  run_puppet_agent(agent, 'production', 1) do |result|
     assert_match(notify_message_regex, result.stderr, 'Unexpected error was detected!')
   end
 end
